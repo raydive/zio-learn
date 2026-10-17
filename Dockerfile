@@ -1,9 +1,11 @@
-FROM golang:1.27.2-bookworm AS build
+FROM --platform=$BUILDPLATFORM golang:1.27.2-bookworm AS build
 WORKDIR /src
 COPY go.mod ./
 COPY cmd ./cmd
 COPY internal ./internal
-RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /zio-learn ./cmd/zio-learn
+ARG TARGETOS
+ARG TARGETARCH
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath -ldflags="-s -w" -o /zio-learn ./cmd/zio-learn
 
 FROM eclipse-temurin:21-jdk-jammy
 ARG SCALA_CLI_VERSION=1.18.0

@@ -23,6 +23,28 @@ docker run --rm --init -p 127.0.0.1:8080:8080 --memory=2g --cpus=2 --pids-limit=
 
 コンテナには Go サーバー・画面・JDK 21・Scala CLI 1.18.0 が含まれます。ホスト側への Go / Scala / Java のインストールは不要です。Scala CLI は JVM 版を使用するため、同じ Dockerfile で amd64 / arm64 を扱えます。
 
+## GitHub Container Registry
+
+GitHub Actions の `CI` ワークフローで `make check` に成功した後、`ghcr.io/raydive/zio-learn` へ `linux/amd64` と `linux/arm64` のイメージを公開します。
+
+| 実行条件 | イメージタグ |
+| --- | --- |
+| `main` への push / `main` からの手動実行 | `latest`、`sha-<コミットSHA>` |
+| `v1.2.3` などのバージョンタグの push | `1.2.3`、`sha-<コミットSHA>` |
+| Pull Request | 検証のみ。公開しません。 |
+
+イメージは `ubuntu-24.04`（amd64）と `ubuntu-24.04-arm`（arm64）の標準ランナーで並列にビルドします。Go のビルドと JVM / Scala CLI による依存の事前取得を各アーキテクチャでネイティブ実行し、QEMU は使いません。Dockerfile は `BUILDPLATFORM` と `GOOS` / `GOARCH` にも対応しているため、ローカルからの Go のクロスコンパイルも可能です。
+
+各ビルドはタグを付けずに digest で GHCR へ送信し、その digest をジョブ間で受け渡します。両方が成功した後、公開ジョブがマニフェストを作成して `latest` / バージョン / SHA タグを付け、amd64 と arm64 が含まれることを検証します。片方のビルドが失敗した場合、公開タグは更新しません。公開用イメージへのキャッシュ汚染を避けるため、Actions のキャッシュからビルドレイヤーを復元しません。
+
+公開後はローカルでビルドせずに起動できます。
+
+```sh
+docker run --rm --init -p 127.0.0.1:8080:8080 ghcr.io/raydive/zio-learn:latest
+```
+
+公開先はワークフロー内の `github.repository` から決まります。認証は自動発行される `GITHUB_TOKEN` を使い、公開ジョブにだけ `packages: write` を付与しています。追加のPAT登録は不要です。初回作成時のパッケージは private のため、誰でも取得できるようにする場合は GitHub の Packages 設定で visibility を public に変更してください。private のまま使う場合は取得前に認証が必要です。[GitHub の Container registry ドキュメント](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)も参照してください。
+
 ## 使い方
 
 1. サンプルを選ぶか、コードをエディタに貼り付けます。
