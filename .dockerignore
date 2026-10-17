@@ -1,0 +1,11 @@
+.git
+.agents
+.codex
+.scala-build
+.bsp
+zio-learn
+.bin
+.github
+*_test.go
+README.md
+.metals/

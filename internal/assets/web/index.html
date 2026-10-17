@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111716">
+  <title>ZIO-learn — Local playground</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/components/prism-core.min.js" integrity="sha384-zLRFO4dwowZvh8kzutOb5AWhH7f39HeJp+N7PtHF1SQtTBnifRx0AtmvTYs3F4YV" crossorigin="anonymous" data-manual defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/components/prism-clike.min.js" integrity="sha384-7LHwxHIDSHTBleLmgDWZbC/IMJsfYfFVOihKhvsrxYW4j47YQcRwZja4ToFE3bA8" crossorigin="anonymous" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/components/prism-java.min.js" integrity="sha384-DioAMZB4yk91W6LuFit5wJDh8c5Ov09f/MBvja94y0PodMqTpTZeBeejqpRUru7D" crossorigin="anonymous" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/components/prism-scala.min.js" integrity="sha384-Ny05Z+BdncAWg13NKXaiXEbxcdi9Ej7lvfA0H405vGxx3gyoh1cc64pNrXx9jN/y" crossorigin="anonymous" defer></script>
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header>
+    <a class="brand" href="/">ZIO<span> / learn</span></a>
+    <span class="local"><span class="dot"></span> LOCAL PLAYGROUND</span>
+  </header>
+  <main>
+    <div class="intro"><div><p class="eyebrow">READ. PASTE. RUN.</p><h1>小さく試して、理解する。</h1><p>ZIO のコードを貼り付けて、すぐに実行。</p></div><a class="docs" href="https://zio.dev/overview/running-effects/" target="_blank" rel="noreferrer">ZIO ドキュメント ↗</a></div>
+    <div class="toolbar">
+      <label>Scala <select id="scala" aria-label="Scala バージョン" disabled></select></label>
+      <label>サンプル <select id="example"><option value="">選択…</option><option value="hello.scala">Hello, ZIO</option><option value="tpromise.scala">TPromise (ZIOAppDefault)</option></select></label>
+      <div class="actions"><span class="shortcut">⌘ / Ctrl + Enter</span><button id="stop" disabled>■ Stop</button><button id="run" class="primary" disabled>▶ Run</button></div>
+    </div>
+    <div class="workspace">
+      <section class="panel editor-panel" aria-label="コードエディタ">
+        <div class="panel-heading"><span id="filename">Application</span><span id="scala-version">Scala</span></div>
+        <div class="editor"><pre id="lines" aria-hidden="true">1</pre><div id="code-area"><pre id="highlight" aria-hidden="true"><code id="highlighted"></code></pre><textarea id="code" aria-label="Scala コード" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off"></textarea></div></div>
+        <div class="editor-footer"><span>ブラウザに自動保存</span><span id="line-count">1 line</span></div>
+      </section>
+      <section class="panel output-panel" aria-label="実行結果">
+        <div class="panel-heading"><span>Console</span><button id="clear" class="text-button">Clear</button></div>
+        <div class="status-bar"><span class="dot" id="status-dot"></span><span id="status" role="status">準備中…</span><span id="duration"></span></div>
+        <pre id="output" tabindex="0" aria-label="標準出力とエラー出力">Run を押すと、実行結果がここに表示されます。</pre>
+      </section>
+    </div>
+    <section class="settings">
+      <p id="hint">ZIOAppDefault を継承する object を定義し、run から試したい effect を返してください。</p>
+    </section>
+    <details id="generated"><summary>生成される Scala CLI ファイルを見る</summary><div class="source-toolbar"><span>playground.sc — 依存定義 + Application + 起動処理</span><button id="download">↓ ダウンロード</button></div><pre id="source"></pre></details>
+    <footer>Go + Scala CLI <span>自分のコードをローカルで実行するためのプレイグラウンドです。</span></footer>
+  </main>
+</body>
+</html>

@@ -1,0 +1,6 @@
+/zio-learn
+/.bin/
+.scala-build/
+.bsp/
+.DS_Store
+.metals/

@@ -1,0 +1,14 @@
+{
+  "scalaVersion": "3.3.7",
+  "scalaVersions": [
+    "3.3.7",
+    "3.9.0",
+    "3.10.0",
+    "2.13.18"
+  ],
+  "dependencies": [
+    "dev.zio::zio:2.1.27",
+    "dev.zio::zio-streams:2.1.27",
+    "dev.zio::zio-json:1.1.0"
+  ]
+}
