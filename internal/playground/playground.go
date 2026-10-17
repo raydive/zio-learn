@@ -17,7 +17,7 @@ var (
 	ErrBusy = errors.New("別のコードを実行中です。終了後に再実行してください。")
 	// ErrClosed means the playground is shutting down.
 	ErrClosed      = errors.New("playground is shutting down")
-	errStopped     = errors.New("stopped")
+	errShutdown    = errors.New("shutdown")
 	errTimeout     = errors.New("timeout")
 	errOutputLimit = errors.New("output_limit")
 )
@@ -25,7 +25,6 @@ var (
 // Event reports process lifecycle or output. It has no HTTP or JSON dependency.
 type Event struct {
 	Type     string
-	ID       string
 	Filename string
 	Text     string
 	Status   string
@@ -33,16 +32,12 @@ type Event struct {
 	Duration time.Duration
 }
 
-// Execution exposes a read-only event stream and cancellation for its caller.
+// Execution exposes the read-only event stream for a running script.
 type Execution struct {
-	ID     string
 	Events <-chan Event
 	cancel context.CancelCauseFunc
 	done   chan struct{}
 }
-
-// Stop cancels this execution without affecting later executions.
-func (e *Execution) Stop() { e.cancel(errStopped) }
 
 // Playground owns process execution and enforces a single active run.
 type Playground struct {
@@ -69,7 +64,7 @@ func (p *Playground) Start(ctx context.Context, filename, source string) (*Execu
 	}
 	runCtx, cancel := context.WithCancelCause(ctx)
 	events := make(chan Event, 16)
-	run := &Execution{ID: fmt.Sprintf("%d", time.Now().UnixNano()), Events: events, cancel: cancel, done: make(chan struct{})}
+	run := &Execution{Events: events, cancel: cancel, done: make(chan struct{})}
 	p.active = run
 	p.mu.Unlock()
 	started := false
@@ -102,7 +97,7 @@ func (p *Playground) Start(ctx context.Context, filename, source string) (*Execu
 	}
 	start := time.Now()
 	timer := time.AfterFunc(p.timeout, func() { cancel(errTimeout) })
-	events <- Event{Type: "started", ID: run.ID, Filename: filename}
+	events <- Event{Type: "started", Filename: filename}
 	close(ready)
 	started = true
 	cleanup = false
@@ -140,24 +135,13 @@ func (p *Playground) release(run *Execution) {
 	}
 }
 
-// Stop cancels the active execution matching id.
-func (p *Playground) Stop(id string) bool {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	if p.active == nil || p.active.ID != id {
-		return false
-	}
-	p.active.Stop()
-	return true
-}
-
 // Shutdown rejects new runs and waits for the active process to be reaped.
 func (p *Playground) Shutdown(ctx context.Context) error {
 	p.mu.Lock()
 	p.closed = true
 	run := p.active
 	if run != nil {
-		run.Stop()
+		run.cancel(errShutdown)
 	}
 	p.mu.Unlock()
 	if run == nil {

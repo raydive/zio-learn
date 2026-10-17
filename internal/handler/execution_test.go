@@ -2,7 +2,6 @@ package handler
 
 import (
 	"bufio"
-	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -24,42 +23,18 @@ func TestExecution(t *testing.T) {
 	}
 }
 
-func TestStopAndBusy(t *testing.T) {
-	ts := fakeHTTPServer(t, "printf 'ready\\n'\nsleep 30\n", 5*time.Second)
-	resp := postTest(t, ts, "/api/run", testRequest)
-	defer closeResponse(t, resp)
-	reader := bufio.NewReader(resp.Body)
-	var id string
-	for id == "" {
-		line, err := reader.ReadBytes('\n')
-		if err != nil {
-			t.Fatal(err)
-		}
-		var event struct {
-			ID string `json:"id"`
-		}
-		if err := json.Unmarshal(line, &event); err != nil {
-			t.Fatal(err)
-		}
-		id = event.ID
+func TestBusy(t *testing.T) {
+	ts := fakeHTTPServer(t, "sleep 30\n", 5*time.Second)
+	response := postTest(t, ts, "/api/run", testRequest)
+	defer closeResponse(t, response)
+	reader := bufio.NewReader(response.Body)
+	if _, err := reader.ReadBytes('\n'); err != nil {
+		t.Fatal(err)
 	}
 	busy := postTest(t, ts, "/api/run", testRequest)
 	closeResponse(t, busy)
 	if busy.StatusCode != http.StatusConflict {
 		t.Fatalf("expected busy, got %d", busy.StatusCode)
-	}
-	start := time.Now()
-	stop := postTest(t, ts, "/api/stop", map[string]string{"id": id})
-	closeResponse(t, stop)
-	if stop.StatusCode != http.StatusOK {
-		t.Fatal(stop.StatusCode)
-	}
-	body := readBody(t, reader)
-	if !strings.Contains(string(body), `"status":"stopped"`) {
-		t.Fatal(string(body))
-	}
-	if time.Since(start) > 2*time.Second {
-		t.Fatal("process tree was not stopped promptly")
 	}
 }
 

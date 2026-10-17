@@ -1,5 +1,5 @@
 const $ = (id) => document.getElementById(id);
-let config, runId = null, running = false, previewTimer, generated;
+let config, running = false, previewTimer, generated;
 let rawOutput = '';
 const controls = [$('scala'), $('example')];
 const syntax = window.Prism?.languages.scala;
@@ -62,10 +62,9 @@ function appendOutput(text) {
   $('output').scrollTop = $('output').scrollHeight;
 }
 function onEvent(event) {
-  if (event.type === 'started') { runId = event.id; $('stop').disabled = false; }
   if (event.type === 'output') appendOutput(event.text);
   if (event.type === 'finished') {
-    const labels = { success: '実行完了', error: `実行失敗 (exit ${event.exitCode})`, stopped: '停止しました', timeout: '実行時間の上限（120 秒）に達しました', output_limit: '出力の上限（1 MiB）に達しました' };
+    const labels = { success: '実行完了', error: `実行失敗 (exit ${event.exitCode})`, timeout: '実行時間の上限（120 秒）に達しました', output_limit: '出力の上限（1 MiB）に達しました' };
     setStatus(labels[event.status] || '実行が中断されました', event.status === 'success' ? '' : 'error');
     $('duration').textContent = `${(event.durationMs / 1000).toFixed(1)}s`;
     if (!$('output').textContent) appendOutput('出力はありません。');
@@ -76,7 +75,6 @@ function onEvent(event) {
 async function run() {
   if (running || !config) return;
   running = true;
-  runId = null;
   $('run').disabled = true;
   controls.forEach(el => el.disabled = true);
   $('output').textContent = '';
@@ -103,18 +101,12 @@ async function run() {
     if (!finished) throw new Error('サーバーとの接続が終了しました。');
   } catch (error) { setStatus('実行できませんでした', 'error'); appendOutput(`\n${error.message}\n`); }
   finally {
-    running = false; runId = null;
-    $('run').disabled = false; $('stop').disabled = true;
+    running = false;
+    $('run').disabled = false;
     controls.forEach(el => el.disabled = false);
   }
 }
 $('run').addEventListener('click', run);
-$('stop').addEventListener('click', async () => {
-  if (!runId) return;
-  $('stop').disabled = true;
-  try { await post('/api/stop', { id: runId }); }
-  catch (error) { setStatus(error.message, 'error'); $('stop').disabled = !running; }
-});
 $('clear').addEventListener('click', () => { rawOutput = ''; $('output').textContent = ''; });
 $('code').addEventListener('input', syncEditor);
 $('code').addEventListener('scroll', syncScroll);

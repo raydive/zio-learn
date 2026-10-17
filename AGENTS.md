@@ -18,4 +18,6 @@ Go はスクリプトの生成・Scala CLI の実行・Web への結果返却を
 
 アプリケーション固有の機能と状態は `playground` と呼び、HTTP サーバーを表す `http.Server` と区別します。
 
-レイヤーは `handler`（HTTP 受付と応答）、`transpiler`（入力検証と Scala CLI スクリプトへの変換）、`playground`（実行・停止・実行結果の配信）に分けます。handler が transpiler と playground を呼び出し、transpiler と playground は HTTP や相互の実装に依存しません。実行結果は型付きイベントを channel で返し、JSON への変換は handler が行います。非同期処理では goroutine の終了、channel の送信待ち解除、context によるキャンセルと子プロセスの回収を保証してください。
+レイヤーは `handler`（HTTP 受付と応答）、`transpiler`（入力検証と Scala CLI スクリプトへの変換）、`playground`（実行・終了時の回収・実行結果の配信）に分けます。handler が transpiler と playground を呼び出し、transpiler と playground は HTTP や相互の実装に依存しません。実行結果は型付きイベントを channel で返し、JSON への変換は handler が行います。非同期処理では goroutine の終了、channel の送信待ち解除、context によるキャンセルと子プロセスの回収を保証してください。
+
+実行の手動停止機能は設けません。Stop ボタンや手動停止 API を追加せず、タイムアウト・接続切断・アプリ終了時のキャンセルと子プロセスの回収は維持します。

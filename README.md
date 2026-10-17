@@ -17,7 +17,6 @@ docker run --rm --init -p 127.0.0.1:8080:8080 ghcr.io/raydive/zio-learn:latest
 1. サンプルを選ぶか、コードをエディタに貼り付けます。
 2. Scala のバージョンを選びます。`zio` / `zio-streams` / `zio-json` はあらかじめ追加されています。
 3. **Run** または `⌘ + Enter` / `Ctrl + Enter` で実行します。
-4. **Stop** で実行を停止できます。
 
 入力するコードは、`ZIOAppDefault` を継承する object を1つ定義し、`run` から試したい effect を返す形にしてください。object 名は自由です。
 

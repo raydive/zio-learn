@@ -2,6 +2,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -44,7 +45,6 @@ func New(config Config, t *transpiler.Transpiler, p *playground.Playground) (htt
 	})
 	mux.HandleFunc("POST /api/script", h.script)
 	mux.HandleFunc("POST /api/run", h.run)
-	mux.HandleFunc("POST /api/stop", h.stop)
 	return localAccess(mux), nil
 }
 
@@ -79,7 +79,9 @@ func (h *Handler) run(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	run, err := h.playground.Start(r.Context(), script.Filename, script.Source)
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+	run, err := h.playground.Start(ctx, script.Filename, script.Source)
 	if err != nil {
 		status := http.StatusInternalServerError
 		if errors.Is(err, playground.ErrBusy) {
@@ -91,7 +93,6 @@ func (h *Handler) run(w http.ResponseWriter, r *http.Request) {
 		respond(w, status, map[string]string{"error": err.Error()})
 		return
 	}
-	defer run.Stop()
 	w.Header().Set("Content-Type", "application/x-ndjson; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-store")
 	controller := http.NewResponseController(w)
@@ -114,24 +115,10 @@ func (h *Handler) run(w http.ResponseWriter, r *http.Request) {
 func wireEvent(event playground.Event) map[string]any {
 	switch event.Type {
 	case "started":
-		return map[string]any{"type": event.Type, "id": event.ID, "filename": event.Filename}
+		return map[string]any{"type": event.Type, "filename": event.Filename}
 	case "output":
 		return map[string]any{"type": event.Type, "text": event.Text}
 	default:
 		return map[string]any{"type": event.Type, "status": event.Status, "exitCode": event.ExitCode, "durationMs": event.Duration.Milliseconds()}
 	}
-}
-
-func (h *Handler) stop(w http.ResponseWriter, r *http.Request) {
-	var req struct {
-		ID string `json:"id"`
-	}
-	if !readJSON(w, r, &req) {
-		return
-	}
-	if !h.playground.Stop(req.ID) {
-		respond(w, http.StatusNotFound, map[string]string{"error": "実行はすでに終了しています。"})
-		return
-	}
-	respond(w, http.StatusOK, map[string]string{"status": "stopping"})
 }

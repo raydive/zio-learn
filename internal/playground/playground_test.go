@@ -111,9 +111,6 @@ func TestShutdownStopsActiveRun(t *testing.T) {
 	if _, err := p.Start(ctx, "playground.sc", ""); !errors.Is(err, ErrBusy) {
 		t.Fatalf("busy=%v", err)
 	}
-	if p.Stop("wrong-id") {
-		t.Fatal("stopped a different run")
-	}
 	if err := p.Shutdown(ctx); err != nil {
 		t.Fatal(err)
 	}
@@ -121,7 +118,7 @@ func TestShutdownStopsActiveRun(t *testing.T) {
 	for event := range run.Events {
 		result = event
 	}
-	if result.Status != "stopped" {
+	if result.Status != "shutdown" {
 		t.Fatalf("result=%+v", result)
 	}
 }
